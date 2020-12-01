@@ -6,7 +6,7 @@
 
 typedef struct Node{
     struct Node *next;
-    char str[MAX_LEN];
+    char str[MAX_LEN + 1];
 } Node;
 
 typedef struct List{
