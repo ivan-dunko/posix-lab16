@@ -13,11 +13,53 @@ typedef struct Context{
 	int ret_code;
 } Context;
 
+int readNewLine(const char *buff, List *list, char *new_line_flag){
+	if (buff == NULL || list == NULL || new_line_flag == NULL)
+		return EINVAL;
+
+	int err;
+	if (buff[0] == '\n'){
+		//show list
+		err = showList(list);
+		assertSuccess("readLoop:showList", err);
+		return SUCCESS_CODE;
+	}
+	
+	//adding element
+	char *new_line_pos = strchr(buff, '\n');
+	if (new_line_pos == NULL)
+		*new_line_flag = 0;
+	else 
+		*new_line_pos = '\0';
+
+	err = addElement(list, buff);
+	assertSuccess("readLoop:addElement", err);
+
+	return SUCCESS_CODE;
+}
+
+int readRestLine(const char *buff, List *list, char *new_line_flag){
+	if (buff == NULL || list == NULL || new_line_flag == NULL)
+		return EINVAL;
+
+	char *new_line_pos = strchr(buff, '\n');
+	if (new_line_pos != NULL){
+		*new_line_flag = 1;
+		*new_line_pos = '\0';
+	}
+
+	if (new_line_pos != buff){
+		int err = addElement(list, buff);
+		assertSuccess("readLoop:addElement", err);
+	}
+
+	return SUCCESS_CODE;
+}
+
 void readLoop(List *list){
 	//1 for \0
     char buff[MAX_LEN + 1];
 	char new_line = 1;
-	int err = SUCCESS_CODE;
 	do{
 		errno = SUCCESS_CODE;
 		ssize_t err_read = read(STDIN_FILENO, buff, MAX_LEN);
@@ -31,35 +73,10 @@ void readLoop(List *list){
 			break;
 
 		buff[read_cnt] = '\0';
-		if (new_line){
-			if (buff[0] == '\n'){
-				//show list
-				err = showList(list);
-				assertSuccess("readLoop:showList", err);
-			}
-			else{
-				char *new_line_pos = strchr(buff, '\n');
-				if (new_line_pos == NULL)
-					new_line = 0;
-				else 
-					*new_line_pos = '\0';
-
-				err = addElement(list, buff);
-				assertSuccess("readLoop:addElement", err);
-			}
-		}
-		else{
-			char *new_line_pos = strchr(buff, '\n');
-			if (new_line_pos != NULL){
-				new_line = 1;
-				*new_line_pos = '\0';
-			}
-
-			if (new_line_pos != buff){
-				err = addElement(list, buff);
-				assertSuccess("readLoop:addElement", err);
-			}
-		}
+		if (new_line)
+			readNewLine(buff, list, &new_line);
+		else
+			readRestLine(buff, list, &new_line);
 
 	} while (1);
 }

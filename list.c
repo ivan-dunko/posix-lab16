@@ -68,9 +68,13 @@ int showList(List *list){
 }
 
 int destroyList(List *list){
+    //dobavit blokirovku
+
     if (list == NULL){
         return EINVAL;
     }
+
+    lockSuccessAssertion(&list->mtx, "destroyList");
 
     //free data
     Node *next;
@@ -80,6 +84,8 @@ int destroyList(List *list){
         free(head);
         head = next;
     }
+
+    unlockSuccessAssertion(&list->mtx, "destroyList");
 
     //destroy mtx
     int err = pthread_mutex_destroy(&list->mtx);
