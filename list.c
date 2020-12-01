@@ -36,7 +36,8 @@ int addElement(List *list, const char *str){
     if (new_el == NULL)
         return ENOMEM;
 
-    strcpy(new_el->str, str);
+    strncpy(new_el->str, str, MAX_LEN + 1);
+    new_el->str[MAX_LEN] = '\0';
 
     lockSuccessAssertion(&list->mtx, "addElement");
 
